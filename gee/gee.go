@@ -7,7 +7,9 @@ import (
 type HandleFunc func(*Context)
 
 type Engine struct {
-	route *Router
+	*RouterGroup
+	route  *Router
+	groups []*RouterGroup
 }
 
 func (e *Engine) addRoute(method string, patten string, handle HandleFunc) {
@@ -15,9 +17,12 @@ func (e *Engine) addRoute(method string, patten string, handle HandleFunc) {
 }
 
 func New() *Engine {
-	return &Engine{
+	engine := &Engine{
 		route: NewRouter(),
 	}
+	engine.RouterGroup = &RouterGroup{engine: engine}
+	engine.groups = []*RouterGroup{engine.RouterGroup}
+	return engine
 }
 
 func (e *Engine) GET(patten string, handle HandleFunc) {
@@ -35,4 +40,36 @@ func (e *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 func (e *Engine) Run(addr string) (err error) {
 	return http.ListenAndServe(addr, e)
+}
+
+type RouterGroup struct {
+	prefix     string
+	middleware []HandleFunc
+	parent     *RouterGroup
+	engine     *Engine
+}
+
+func (group *RouterGroup) Group(prefix string) *RouterGroup {
+	engine := group.engine
+	newGroup := &RouterGroup{
+		prefix: group.prefix + prefix,
+		parent: group,
+		engine: engine,
+	}
+	engine.groups = append(engine.groups, newGroup)
+	return newGroup
+}
+
+func (group *RouterGroup) addRoute(method string, comp string, handler HandleFunc) {
+	patten := group.prefix + comp
+	group.engine.route.AddRoute(method, patten, handler)
+}
+
+func (group *RouterGroup) GET(pattern string, handler HandleFunc) {
+	group.addRoute("GET", pattern, handler)
+}
+
+// POST defines the method to add POST request
+func (group *RouterGroup) POST(pattern string, handler HandleFunc) {
+	group.addRoute("POST", pattern, handler)
 }
