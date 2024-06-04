@@ -18,6 +18,8 @@ type Context struct {
 	Params map[string]string
 	// response info
 	StatusCode int
+	handlers   []HandleFunc
+	index      int
 }
 
 func NewContext(writer http.ResponseWriter, req *http.Request) *Context {
@@ -26,8 +28,17 @@ func NewContext(writer http.ResponseWriter, req *http.Request) *Context {
 		Req:    req,
 		Method: req.Method,
 		Path:   req.URL.Path,
+		index:  -1,
 	}
 }
+
+func (c *Context) Next() {
+	c.index++
+	for ; c.index < len(c.handlers); c.index++ {
+		c.handlers[c.index](c)
+	}
+}
+
 func (c *Context) PostForm(key string) string {
 	return c.Req.FormValue(key)
 }
