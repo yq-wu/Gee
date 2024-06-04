@@ -7,7 +7,7 @@ import (
 
 type Router struct {
 	roots    map[string]*node
-	handlers map[string]HandleFunc
+	handlers map[string]HandlerFunc
 }
 
 // roots key eg, roots['GET'] roots['POST']
@@ -16,7 +16,7 @@ type Router struct {
 func NewRouter() *Router {
 	return &Router{
 		roots:    make(map[string]*node),
-		handlers: make(map[string]HandleFunc),
+		handlers: make(map[string]HandlerFunc),
 	}
 }
 
@@ -36,7 +36,7 @@ func parsePattern(pattern string) []string {
 	return parts
 }
 
-func (r *Router) AddRoute(method string, pattern string, handler HandleFunc) {
+func (r *Router) AddRoute(method string, pattern string, handler HandlerFunc) {
 	parts := parsePattern(pattern)
 
 	key := method + "-" + pattern

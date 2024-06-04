@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func Logger() HandleFunc {
+func Logger() HandlerFunc {
 	return func(c *Context) {
 		// Start timer
 		t := time.Now()
